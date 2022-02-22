@@ -1,118 +1,153 @@
-const container = document.createElement('div');
-container.classList.add('container');
+let gridSize = 800;
+let clearColor = 'rgb(220, 220, 220)';
+let paintColor = 'rgb(140, 140, 140)';
+let delta = 40;
+let numSquares = 16;
+let squares = [];
 
-const title = document.createElement('div');
-title.classList.add('title');
+const container = document.createElement("div");
+container.classList.add("container")
+container.style.display = 'flex';
+container.style.flexDirection = 'column';
+container.style.alignItems = 'center';
+
+const title = document.createElement("div");
+title.classList.add("title");
 title.innerHTML = 'Etch-a-Sketch';
 
-let grid = document.createElement('div');
-grid.classList.add('grid');
+const grid = document.createElement("div");
+grid.classList.add('grid')
+grid.style.display = 'flex';
+grid.style.flexWrap = 'wrap';
 
-const options = document.createElement('div');
-options.classList.add('options');
+const options = document.createElement("div");
+options.classList.add("options");
+options.style.display = 'flex';
+options.style.justifyContent = 'space-around';
+options.style.alignItems = 'center';
+options.style.width = `${gridSize}px`;
 
-const defaultColor = 'rgb(200, 200, 200)';
+const paintColorSelect = document.createElement("input");
+paintColorSelect.id = 'paintColorSelect';
+paintColorSelect.type = 'color';
+paintColorSelect.value = rgbToHex(paintColor);
 
-const squareColor = document.createElement('input');
-squareColor.type = 'color';
-squareColor.classList.add('colorSelect');
-squareColor.value = rgbToHex(rgbDim(defaultColor, 60));
-squareColor.addEventListener("input", (e) => setSquareColor(e.target.value));
+const pcsLabel = document.createElement("label");
+pcsLabel.setAttribute("for", "paintColorSelect");
+pcsLabel.innerHTML = 'Paint Color: ';
+pcsLabel.append(paintColorSelect);
 
-const gridColor = document.createElement('input');
-gridColor.type = 'color';
-gridColor.classList.add('colorSelect');
-gridColor.value = rgbToHex(defaultColor);
-gridColor.addEventListener("input", (e) => setGridColor(e.target.value));
+paintColorSelect.addEventListener("input", (e) => paintColor = e.target.value);
 
-const clearButton = document.createElement('button');
-clearButton.classList.add('button');
-clearButton.innerHTML = 'Clear';
-clearButton.onclick = () => resetSquareColor(gridColor.value);
+const clearColorSelect = document.createElement("input");
+clearColorSelect.id = 'clearColorSelect';
+clearColorSelect.type = 'color';
+clearColorSelect.value = rgbToHex(clearColor);
+clearColorSelect.addEventListener("input", (e) => clearColor = e.target.value);
 
-document.body.appendChild(container);
+const ccsLabel = document.createElement("label");
+ccsLabel.setAttribute("for", "clearColorSelect");
+ccsLabel.innerHTML = 'Clear Color:';
+ccsLabel.append(clearColorSelect);
+
+
+const clearButton = document.createElement("button");
+clearButton.classList.add("clear-button");
+clearButton.style.display = 'flex';
+clearButton.style.justifyContent = 'center';
+clearButton.style.alignItems = 'center';
+clearButton.style.width = '60px';
+clearButton.style.height = '30px';
+clearButton.innerHTML = 'CLEAR';
+
+const darkenCheck = document.createElement("input");
+darkenCheck.id = 'darkenCheck'
+darkenCheck.classList.add("darken-check")
+darkenCheck.type = 'checkbox';
+
+const dcLabel = document.createElement("label");
+dcLabel.setAttribute("for", "darkenCheck");
+dcLabel.innerHTML = 'Darken:';
+dcLabel.append(darkenCheck);
+
+document.body.append(container);
 container.append(title);
 container.append(grid);
-container.append(options);
-options.append(squareColor);
-options.append(gridColor);
+container.append(options)
+options.append(pcsLabel);
+options.append(ccsLabel);
+options.append(dcLabel);
 options.append(clearButton);
 
 
-function setGrid(gridSize, numSquares) {
+function setSize(elem, size) {
+  elem.style.width = `${size}px`;
+  elem.style.height = `${size}px`;
+};
 
-  function setSideLen(elem, width, height) {
-    elem.style.width = `${width}px`;
-    elem.style.height = `${height}px`;
-  };
+setSize(grid, gridSize);
 
-  setSideLen(grid, gridSize, gridSize);
-  setSideLen(options, gridSize, 200);
-
-  let squareSize = gridSize/numSquares;
-  for(n=0; n<numSquares*numSquares; n++) {
-    let square = document.createElement('div');
-    setSideLen(square, squareSize, squareSize);
+function makeSquares(numSqrs) {
+  for(x=0; x<numSquares*numSquares; x++) {
+    let square = document.createElement("div");
+    setSize(square, gridSize/numSquares);
     grid.append(square);
+    squares[x] = square;
+    square.style.backgroundColor = clearColor;
   };
 };
 
-setGrid(700, 16);
+makeSquares(numSquares);
 
-
-function setSquareColor(color) {
-  const squares = grid.getElementsByTagName('*');
-  for (s=0; s<squares.length; s++) {
-    squares[s].addEventListener('mouseover', (e) => e.target.style.backgroundColor = color);
+function addEvents() {
+  for(s=0; s<squares.length; s++) {
+    squares[s].addEventListener("mouseover", (e) => 
+    e.target.style.backgroundColor = getColor(e.target.style.backgroundColor));
   };
 };
 
-setSquareColor(squareColor.value);
-
-function resetSquareColor(color) {
-  const squares = grid.getElementsByTagName('*');
-  for (s=0; s<squares.length; s++) {
-    squares[s].style.backgroundColor = color;
-  };
-};
-
-
-function setGridColor(color) {
-  grid.style.backgroundColor = color;
-};
-
-setGridColor(gridColor.value);
-
-function rgbDecomp(rgbStr) {
-  let [r, g, b] = rgbStr.match(/\d+/g).map(Number);
-  return [r, g, b];
+function getColor(color) {
+  if(color !== clearColor && darkenCheck.checked) return darkenRGB(color);
+  else return paintColor;
 }
 
-function rgbDim (rgbStr, delta) {
-  let [r, g, b] = rgbDecomp(rgbStr);
+addEvents();
 
-  const newV = (v) => Math.max(
-    0,
-    Math.min(250, v - delta)
-  );
+clearButton.addEventListener("click", (e) => clear(clearColor));
 
-  r = newV(r);
-  g = newV(g);
-  b = newV(b);
+function clear() {
+  for(s=0; s<squares.length; s++) {
+    squares[s].style.backgroundColor = clearColor;
+  };
+};
+
+
+function darkenRGB(rgbStr, d=delta) {
+  let [r, g, b] = rgbStr.match(/\d+/g);
+
+
+
+  r = Math.max(0, r-d);
+  b = Math.max(0, b-d);
+  g = Math.max(0, g-d);
 
   return `rgb(${r}, ${g}, ${b})`;
-};
-
-function rgbToHex(rgbStr) {
-
-  function componentToHex(c) {
-    var hex = c.toString(16);
-    return hex.length == 1 ? "0" + hex : hex;
-  }
-
-  let [r, g, b] = rgbDecomp(rgbStr);
-  
-  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-
 }
 
+function rgbToHex(rgbStr) {
+  let [r, g, b] = rgbStr.match(/\d+/g);
+
+  r = Number(r).toString(16);
+  g = Number(g).toString(16);
+  b = Number(b).toString(16);
+
+  if (r.length == 1)
+    r = "0" + r;
+  if (g.length == 1)
+    g = "0" + g;
+  if (b.length == 1)
+    b = "0" + b;
+
+  return "#" + r + g + b;
+
+}
