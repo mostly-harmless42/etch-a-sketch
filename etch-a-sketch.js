@@ -1,43 +1,45 @@
-let gridSize = 800;
 let clearColor = 'rgb(220, 220, 220)';
-let paintColor = 'rgb(140, 140, 140)';
+let paintColor = 'rgb(150, 150, 150)';
+let gridSize = 800;
 let delta = 40;
-let numSquares = 16;
-let squares = [];
 
 const container = document.createElement("div");
 container.classList.add("container")
-container.style.display = 'flex';
-container.style.flexDirection = 'column';
-container.style.alignItems = 'center';
+
 
 const title = document.createElement("div");
 title.classList.add("title");
 title.innerHTML = 'Etch-a-Sketch';
 
 const grid = document.createElement("div");
-grid.classList.add('grid')
-grid.style.display = 'flex';
-grid.style.flexWrap = 'wrap';
+grid.classList.add('grid');
 
 const options = document.createElement("div");
 options.classList.add("options");
-options.style.display = 'flex';
-options.style.justifyContent = 'space-around';
-options.style.alignItems = 'center';
 options.style.width = `${gridSize}px`;
+
+const numSqrSlider = document.createElement("input");
+numSqrSlider.classList.add("numSqrSlider");
+numSqrSlider.type = 'range';
+numSqrSlider.min = '4';
+numSqrSlider.max = '100';
+numSqrSlider.value = 21;
+numSqrSlider.addEventListener("change", (e) => {
+  removeSquares();
+  makeSquares(e.target.value)
+})
 
 const paintColorSelect = document.createElement("input");
 paintColorSelect.id = 'paintColorSelect';
 paintColorSelect.type = 'color';
 paintColorSelect.value = rgbToHex(paintColor);
+paintColorSelect.addEventListener("input", (e) => paintColor = e.target.value);
 
 const pcsLabel = document.createElement("label");
 pcsLabel.setAttribute("for", "paintColorSelect");
 pcsLabel.innerHTML = 'Paint Color: ';
 pcsLabel.append(paintColorSelect);
 
-paintColorSelect.addEventListener("input", (e) => paintColor = e.target.value);
 
 const clearColorSelect = document.createElement("input");
 clearColorSelect.id = 'clearColorSelect';
@@ -53,11 +55,6 @@ ccsLabel.append(clearColorSelect);
 
 const clearButton = document.createElement("button");
 clearButton.classList.add("clear-button");
-clearButton.style.display = 'flex';
-clearButton.style.justifyContent = 'center';
-clearButton.style.alignItems = 'center';
-clearButton.style.width = '60px';
-clearButton.style.height = '30px';
 clearButton.innerHTML = 'CLEAR';
 
 const darkenCheck = document.createElement("input");
@@ -74,11 +71,11 @@ document.body.append(container);
 container.append(title);
 container.append(grid);
 container.append(options)
+options.append(numSqrSlider);
 options.append(pcsLabel);
 options.append(ccsLabel);
 options.append(dcLabel);
 options.append(clearButton);
-
 
 function setSize(elem, size) {
   elem.style.width = `${size}px`;
@@ -88,34 +85,46 @@ function setSize(elem, size) {
 setSize(grid, gridSize);
 
 function makeSquares(numSqrs) {
-  for(x=0; x<numSquares*numSquares; x++) {
+  let sqrSize = gridSize/numSqrs;
+  setSize(grid, sqrSize*numSqrs);
+  for(x=0; x<numSqrs*numSqrs; x++) {
     let square = document.createElement("div");
-    setSize(square, gridSize/numSquares);
+    square.style.flex = `0 0 ${sqrSize/gridSize*100}%`;
     grid.append(square);
-    squares[x] = square;
+    square.classList.add("square");
     square.style.backgroundColor = clearColor;
   };
+  let squares = document.getElementsByClassName("square");
+  addEvents(squares);
 };
 
-makeSquares(numSquares);
+makeSquares(numSqrSlider.value);
 
-function addEvents() {
-  for(s=0; s<squares.length; s++) {
-    squares[s].addEventListener("mouseover", (e) => 
+function removeSquares() {
+  let squares = document.getElementsByClassName("square");
+  while(squares[0]) {
+    squares[0].parentElement.removeChild(squares[0]);
+  }
+}
+
+function addEvents(sqrs) {
+  for(s=0; s<sqrs.length; s++) {
+    sqrs[s].addEventListener("mouseover", (e) => 
     e.target.style.backgroundColor = getColor(e.target.style.backgroundColor));
   };
 };
 
 function getColor(color) {
-  if(color !== clearColor && darkenCheck.checked) return darkenRGB(color);
+  if(darkenCheck.checked) return darkenRGB(color);
   else return paintColor;
 }
 
-addEvents();
+
 
 clearButton.addEventListener("click", (e) => clear(clearColor));
 
 function clear() {
+  let squares = document.getElementsByClassName("square");
   for(s=0; s<squares.length; s++) {
     squares[s].style.backgroundColor = clearColor;
   };
@@ -124,8 +133,6 @@ function clear() {
 
 function darkenRGB(rgbStr, d=delta) {
   let [r, g, b] = rgbStr.match(/\d+/g);
-
-
 
   r = Math.max(0, r-d);
   b = Math.max(0, b-d);
