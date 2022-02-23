@@ -23,7 +23,7 @@ numSqrSlider.classList.add("numSqrSlider");
 numSqrSlider.type = 'range';
 numSqrSlider.min = '4';
 numSqrSlider.max = '100';
-numSqrSlider.value = 21;
+numSqrSlider.value = 16;
 numSqrSlider.addEventListener("change", (e) => {
   removeSquares();
   makeSquares(e.target.value)
